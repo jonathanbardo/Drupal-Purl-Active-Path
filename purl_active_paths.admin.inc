@@ -15,7 +15,7 @@ function purl_active_paths_form() {
   $form['providers']['purl_active_paths_opt_type'] = array(
     '#type' => 'radios',
     '#title' => t('Opt type'),
-    '#description' => t('In include mode, only paths defined in the admin or hook_purl_active_paths will be rewritten by purl in outbound links. In exclude mode, these paths will be excluded from rewrites.')
+    '#description' => t('In include mode, only paths defined in the admin or hook_purl_active_paths will be rewritten by purl in outbound links. In exclude mode, these paths will be excluded from rewrites.'),
     '#options' => array(t('Exclude'), t('Include')),
     '#default_value' => variable_get('purl_active_paths_opt_type', 0),
   );
