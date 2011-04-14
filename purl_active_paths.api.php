@@ -1,6 +1,7 @@
-<?php
+<?php // $Id$
 /**
  * @file
+ * purl_active_paths.api.php
  * Hooks provided by the Purl Active Paths module.
  */
 

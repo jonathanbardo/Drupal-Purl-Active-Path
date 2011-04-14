@@ -1,6 +1,7 @@
-<?php
+<?php // $Id$
 /**
- * @file purl_active_paths.module
+ * @file
+ * purl_active_paths.module
  * Purl Active Paths module allows for admin or module to define paths to be
  * included/excluded from purl outbound rewrites via the admin interface or the
  * hook hook_purl_active_paths.
@@ -30,18 +31,18 @@ function purl_active_paths_menu() {
  */
 function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
   $hook_active = _purl_active_paths_invoke_all();
-  
+
   // Match global paths
   $active = trim(variable_get('purl_active_paths_default_paths', ''));
   if ($active == '') $active = NULL;
   $active .= isset($hook_active['global']) ? (($active != '' ? "\n" : '') . trim($hook_active['global'])) : '';
-  
+
   if ($active) {
     $global_page_match = drupal_match_path($path, $active);
     if ($path != $original) {
       $global_page_match = $global_page_match || drupal_match_path($original, $active);
     }
-    
+
     // we have a match
     if ($global_page_match) {
       // include is set
@@ -55,25 +56,25 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
       }
     }
   }
-  
+
   // Match paths per provider
   foreach (module_invoke_all('purl_provider') as $id => $provider) {
     $active = trim(variable_get("purl_active_paths_paths_{$id}", ''));
-    
+
     if ($active == '') $active = NULL;
     $active .= isset($hook_active[$id]) ? (($active != '' ? "\n" : '') . trim($hook_active[$id])) : '';
-    
+
     if ($active) {
       $page_match = drupal_match_path($path, $active);
       if ($path != $original) {
         $page_match = $page_match || drupal_match_path($original, $active);
       }
-      $page_match = !(variable_get('purl_active_paths_opt_type', 0) xor ($page_match || preg_match('/<front>/', $active)));
+      $page_match = !(variable_get('purl_active_paths_opt_type', 0)xor($page_match || preg_match('/<front>/', $active)));
       if (!$page_match) {
         $options['purl']['remove'][] = $id;
       }
     }
-    else if (variable_get('purl_active_paths_opt_type', 0)) {
+    elseif (variable_get('purl_active_paths_opt_type', 0)) {
       $options['purl']['remove'][] = $id;
     }
   }
@@ -94,7 +95,6 @@ function _purl_active_paths_invoke_all() {
       else {
         $hook_active[$id] .= "\n" . implode("\n", $paths);
       }
-
     }
   }
   return $hook_active;
