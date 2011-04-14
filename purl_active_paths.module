@@ -1,0 +1,108 @@
+<?php
+/**
+ * @file purl_active_paths.module
+ * TODO: Enter file description here.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function purl_active_paths_menu() {
+  $items = array();
+  $items['admin/settings/purl/active_paths'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Active paths',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('purl_active_paths_form'),
+    'file' => 'purl_active_paths.admin.inc',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer site configuration'),
+    'weight' => 13,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_url_outbound_alter().
+ */
+function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
+  $hook_active = _purl_active_paths_invoke_all();
+  
+  $active = trim(variable_get('purl_active_paths_default_paths', ''));
+  if ($active == '') $active = NULL;
+  $active .= isset($hook_active['all']) ? (($active != '' ? "\n" : '') . trim($hook_active['all'])) : '';
+  
+  if ($active) {
+    $global_page_match = drupal_match_path($path, $active);
+    if ($path != $original) {
+      $global_page_match = $global_page_match || drupal_match_path($original, $active);
+    }
+    
+    // we have a match
+    if ($global_page_match) {
+      // include is set
+      if (variable_get('purl_active_paths_opt_type', 0)) {
+        return;
+      }
+      // exclude is set
+      else {
+        $options['purl']['disabled'] = TRUE;
+        return;
+      }
+    }
+  }
+  
+  foreach (module_invoke_all('purl_provider') as $id => $provider) {
+    $active = trim(variable_get("purl_active_paths_paths_{$id}", ''));
+    
+    if ($active == '') $active = NULL;
+    $active .= isset($hook_active[$id]) ? (($active != '' ? "\n" : '') . trim($hook_active[$id])) : '';
+    
+    if ($active) {
+      $page_match = drupal_match_path($path, $active);
+      if ($path != $original) {
+        $page_match = $page_match || drupal_match_path($original, $active);
+      }
+      $page_match = !(variable_get('purl_active_paths_opt_type', 0) xor ($page_match || preg_match('/<front>/', $active)));
+      if (!$page_match) {
+        $options['purl']['remove'][] = $id;
+      }
+    }
+    else if (variable_get('purl_active_paths_opt_type', 0)) {
+      $options['purl']['remove'][] = $id;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_purl_active_paths().
+ */
+function purl_active_paths_purl_active_paths() {
+  return array(
+    'all' => array(
+      'ajax*',
+      'ahah*',
+      'location/autocomplete*',
+    ),
+  );
+}
+
+function _purl_active_paths_invoke_all() {
+  static $hook_active;
+  if (!$hook_active) {
+    $hook_active = array();
+    foreach (module_invoke_all('purl_active_paths') as $id => $paths) {
+      if (!isset($hook_active[$id])) {
+        $hook_active[$id] = '';
+      }
+
+      if($hook_active[$id] == '') {
+        $hook_active[$id] .= implode("\n", $paths);
+      } else {
+        $hook_active[$id] .= "\n" . implode("\n", $paths);
+      }
+
+    }
+  }
+  return $hook_active;
+}
