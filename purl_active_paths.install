@@ -1,11 +1,11 @@
 <?php
 /**
  * @file purl_active_paths.install
- * TODO: Enter file description here.
  */
 
 /**
  * Implementation of hook_install().
+ *
  * Need to weigh this module one less than purl module.
  */
 function purl_active_paths_install() {

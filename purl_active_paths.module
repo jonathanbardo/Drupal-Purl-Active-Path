@@ -1,7 +1,9 @@
 <?php
 /**
  * @file purl_active_paths.module
- * TODO: Enter file description here.
+ * Purl Active Paths module allows for admin or module to define paths to be
+ * included/excluded from purl outbound rewrites via the admin interface or the
+ * hook hook_purl_active_paths.
  */
 
 /**
@@ -12,6 +14,7 @@ function purl_active_paths_menu() {
   $items['admin/settings/purl/active_paths'] = array(
     'type' => MENU_LOCAL_TASK,
     'title' => 'Active paths',
+    'description' => 'Settings for persistent url active paths.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('purl_active_paths_form'),
     'file' => 'purl_active_paths.admin.inc',
@@ -28,9 +31,10 @@ function purl_active_paths_menu() {
 function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
   $hook_active = _purl_active_paths_invoke_all();
   
+  // Match global paths
   $active = trim(variable_get('purl_active_paths_default_paths', ''));
   if ($active == '') $active = NULL;
-  $active .= isset($hook_active['all']) ? (($active != '' ? "\n" : '') . trim($hook_active['all'])) : '';
+  $active .= isset($hook_active['global']) ? (($active != '' ? "\n" : '') . trim($hook_active['global'])) : '';
   
   if ($active) {
     $global_page_match = drupal_match_path($path, $active);
@@ -52,6 +56,7 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
     }
   }
   
+  // Match paths per provider
   foreach (module_invoke_all('purl_provider') as $id => $provider) {
     $active = trim(variable_get("purl_active_paths_paths_{$id}", ''));
     
@@ -74,19 +79,6 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
   }
 }
 
-/**
- * Implementation of hook_purl_active_paths().
- */
-function purl_active_paths_purl_active_paths() {
-  return array(
-    'all' => array(
-      'ajax*',
-      'ahah*',
-      'location/autocomplete*',
-    ),
-  );
-}
-
 function _purl_active_paths_invoke_all() {
   static $hook_active;
   if (!$hook_active) {
@@ -96,13 +88,28 @@ function _purl_active_paths_invoke_all() {
         $hook_active[$id] = '';
       }
 
-      if($hook_active[$id] == '') {
+      if ($hook_active[$id] == '') {
         $hook_active[$id] .= implode("\n", $paths);
-      } else {
+      }
+      else {
         $hook_active[$id] .= "\n" . implode("\n", $paths);
       }
 
     }
   }
   return $hook_active;
+}
+
+/**
+ * Implementation of hook_purl_active_paths().
+ *
+ * Prevent ahah ajax calls from security sandbox violations.
+ * TODO: Write any other core ajax calls into this hook.
+ */
+function purl_active_paths_purl_active_paths() {
+  return array(
+    'global' => array(
+      'ahah*',
+    ),
+  );
 }
