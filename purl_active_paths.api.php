@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php
 /**
  * @file
  * purl_active_paths.api.php

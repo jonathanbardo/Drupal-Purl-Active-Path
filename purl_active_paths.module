@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php
 /**
  * @file
  * purl_active_paths.module
@@ -80,6 +80,10 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
   }
 }
 
+/**
+ * module_invoke_all wrapper for hook_purl_active_paths. Returns all paths in a
+ * formatted array.
+ */
 function _purl_active_paths_invoke_all() {
   static $hook_active;
   if (!$hook_active) {
