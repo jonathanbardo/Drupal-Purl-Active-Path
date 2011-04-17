@@ -34,7 +34,9 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
 
   // Match global paths
   $active = trim(variable_get('purl_active_paths_default_paths', ''));
-  if ($active == '') $active = NULL;
+  if ($active == '') {
+    $active = NULL;
+  }
   $active .= isset($hook_active['global']) ? (($active != '' ? "\n" : '') . trim($hook_active['global'])) : '';
 
   if ($active) {
