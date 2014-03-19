@@ -1,7 +1,5 @@
 name = Purl Active Paths
 description = Allows admin or module to define paths to be included/excluded from purl outbound rewrites.
-core = 6.x
+core = 7.x
 
-dependencies[] = url_alter
 dependencies[] = purl
-

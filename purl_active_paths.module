@@ -12,16 +12,16 @@
  */
 function purl_active_paths_menu() {
   $items = array();
-  $items['admin/settings/purl/active_paths'] = array(
-    'type' => MENU_LOCAL_TASK,
-    'title' => 'Active paths',
-    'description' => 'Settings for persistent url active paths.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('purl_active_paths_form'),
-    'file' => 'purl_active_paths.admin.inc',
-    'access callback' => 'user_access',
+  $items['admin/config/search/purl/active_paths'] = array(
+    'type'             => MENU_LOCAL_TASK,
+    'title'            => 'Active paths',
+    'description'      => 'Settings for persistent url active paths.',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('purl_active_paths_form'),
+    'access callback'  => 'user_access',
     'access arguments' => array('administer site configuration'),
-    'weight' => 13,
+    'file'             => 'purl_active_paths.admin.inc',
+    'weight'           => 13,
   );
   return $items;
 }
@@ -39,8 +39,11 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
   }
   $active .= isset($hook_active['global']) ? (($active != '' ? "\n" : '') . trim($hook_active['global'])) : '';
 
+  $language = isset($options['language']) && isset($options['language']->language) ? $options['language']->language : '';
+  $alias_path = drupal_get_path_alias($path, $language);
+
   if ($active) {
-    $global_page_match = drupal_match_path($path, $active);
+    $global_page_match = drupal_match_path($alias_path, $active);
     if ($path != $original) {
       $global_page_match = $global_page_match || drupal_match_path($original, $active);
     }
@@ -67,7 +70,7 @@ function purl_active_paths_url_outbound_alter(&$path, &$options, $original) {
     $active .= isset($hook_active[$id]) ? (($active != '' ? "\n" : '') . trim($hook_active[$id])) : '';
 
     if ($active) {
-      $page_match = drupal_match_path($path, $active);
+      $page_match = drupal_match_path($alias_path, $active);
       if ($path != $original) {
         $page_match = $page_match || drupal_match_path($original, $active);
       }
@@ -104,18 +107,4 @@ function _purl_active_paths_invoke_all() {
     }
   }
   return $hook_active;
-}
-
-/**
- * Implementation of hook_purl_active_paths().
- *
- * Prevent ahah ajax calls from security sandbox violations.
- * TODO: Write any other core ajax calls into this hook.
- */
-function purl_active_paths_purl_active_paths() {
-  return array(
-    'global' => array(
-      'ahah*',
-    ),
-  );
 }
